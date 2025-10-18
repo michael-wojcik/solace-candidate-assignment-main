@@ -2,6 +2,26 @@
 
 import { useEffect, useState } from "react";
 
+// Component to highlight search matches
+function HighlightMatch({ text, searchTerm }: { text: string; searchTerm: string }) {
+  if (!searchTerm.trim()) return <>{text}</>;
+
+  const regex = new RegExp(`(${searchTerm.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm font-medium">
+            {part}
+          </mark>
+        ) : part
+      )}
+    </>
+  );
+}
+
 export default function Home() {
   const [advocates, setAdvocates] = useState([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState([]);
@@ -128,31 +148,34 @@ export default function Home() {
                 return (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {advocate.firstName}
+                      <HighlightMatch text={advocate.firstName} searchTerm={searchTerm} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {advocate.lastName}
+                      <HighlightMatch text={advocate.lastName} searchTerm={searchTerm} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {advocate.city}
+                      <HighlightMatch text={advocate.city} searchTerm={searchTerm} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {advocate.degree}
+                      <HighlightMatch text={advocate.degree} searchTerm={searchTerm} />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="flex flex-wrap gap-1">
-                        {advocate.specialties.map((s, i) => (
+                        {advocate.specialties.map((s: string, i: number) => (
                           <span
                             key={i}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                           >
-                            {s}
+                            <HighlightMatch text={s} searchTerm={searchTerm} />
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {advocate.yearsOfExperience} years
+                      <HighlightMatch
+                        text={`${advocate.yearsOfExperience} years`}
+                        searchTerm={searchTerm}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {advocate.phoneNumber.toString().replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')}
