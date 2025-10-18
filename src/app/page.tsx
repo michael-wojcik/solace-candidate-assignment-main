@@ -60,24 +60,35 @@ export default function Home() {
       });
   }, []);
 
+  // Debounce search to avoid filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchTerm) {
+        setFilteredAdvocates(advocates);
+        return;
+      }
+
+      console.log("filtering advocates...");
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = advocates.filter((advocate) => {
+        return (
+          advocate.firstName.toLowerCase().includes(searchLower) ||
+          advocate.lastName.toLowerCase().includes(searchLower) ||
+          advocate.city.toLowerCase().includes(searchLower) ||
+          advocate.degree.toLowerCase().includes(searchLower) ||
+          advocate.specialties.some((s) => s.toLowerCase().includes(searchLower)) ||
+          advocate.yearsOfExperience.toString().includes(searchTerm)
+        );
+      });
+
+      setFilteredAdvocates(filtered);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, advocates]);
+
   const onChange = (e) => {
-    const search = e.target.value;
-    setSearchTerm(search);
-
-    console.log("filtering advocates...");
-    const searchLower = search.toLowerCase();
-    const filtered = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.toLowerCase().includes(searchLower) ||
-        advocate.lastName.toLowerCase().includes(searchLower) ||
-        advocate.city.toLowerCase().includes(searchLower) ||
-        advocate.degree.toLowerCase().includes(searchLower) ||
-        advocate.specialties.some((s) => s.toLowerCase().includes(searchLower)) ||
-        advocate.yearsOfExperience.toString().includes(search)
-      );
-    });
-
-    setFilteredAdvocates(filtered);
+    setSearchTerm(e.target.value);
   };
 
   const onClick = () => {
