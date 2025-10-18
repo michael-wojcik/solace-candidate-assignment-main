@@ -114,7 +114,7 @@ export default function Home() {
             <p className="text-gray-600">Loading advocates...</p>
           </div>
         </div>
-      ) : (
+      ) : filteredAdvocates.length > 0 ? (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -187,6 +187,34 @@ export default function Home() {
           </table>
         </div>
       </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No advocates found</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              Try adjusting your search criteria or{" "}
+              <button
+                onClick={onClick}
+                className="text-blue-600 hover:text-blue-500 font-medium"
+              >
+                clear your search
+              </button>
+            </p>
+          </div>
+        </div>
       )}
       </div>
     </main>
