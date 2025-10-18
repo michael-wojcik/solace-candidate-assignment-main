@@ -6,6 +6,7 @@ export default function Home() {
   const [advocates, setAdvocates] = useState([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -20,10 +21,12 @@ export default function Home() {
       .then((jsonResponse) => {
         setAdvocates(jsonResponse.data);
         setFilteredAdvocates(jsonResponse.data);
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching advocates:", err);
         setError(err.message);
+        setLoading(false);
       });
   }, []);
 
@@ -84,6 +87,14 @@ export default function Home() {
           </div>
         </div>
 
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading advocates...</p>
+          </div>
+        </div>
+      ) : (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -153,6 +164,7 @@ export default function Home() {
           </table>
         </div>
       </div>
+      )}
       </div>
     </main>
   );
