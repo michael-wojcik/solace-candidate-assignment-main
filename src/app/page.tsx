@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+interface Advocate {
+  firstName: string;
+  lastName: string;
+  city: string;
+  degree: string;
+  specialties: string[];
+  yearsOfExperience: number;
+  phoneNumber: number;
+}
+
 // Component to highlight search matches
 function HighlightMatch({ text, searchTerm }: { text: string; searchTerm: string }) {
   if (!searchTerm.trim()) return <>{text}</>;
@@ -23,11 +33,11 @@ function HighlightMatch({ text, searchTerm }: { text: string; searchTerm: string
 }
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("fetching advocates...");
