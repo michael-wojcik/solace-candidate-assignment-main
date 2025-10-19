@@ -2,90 +2,221 @@
 
 import { useEffect, useState } from "react";
 
+// Component to highlight search matches
+function HighlightMatch({ text, searchTerm }: { text: string; searchTerm: string }) {
+  if (!searchTerm.trim()) return <>{text}</>;
+
+  const regex = new RegExp(`(${searchTerm.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm font-medium">
+            {part}
+          </mark>
+        ) : part
+      )}
+    </>
+  );
+}
+
 export default function Home() {
   const [advocates, setAdvocates] = useState([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
+    fetch("/api/advocates")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch advocates");
+        }
+        return response.json();
+      })
+      .then((jsonResponse) => {
         setAdvocates(jsonResponse.data);
         setFilteredAdvocates(jsonResponse.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching advocates:", err);
+        setError(err.message);
+        setLoading(false);
       });
-    });
   }, []);
 
   const onChange = (e) => {
-    const searchTerm = e.target.value;
-
-    document.getElementById("search-term").innerHTML = searchTerm;
+    const search = e.target.value;
+    setSearchTerm(search);
 
     console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
+    const searchLower = search.toLowerCase();
+    const filtered = advocates.filter((advocate) => {
       return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
+        advocate.firstName.toLowerCase().includes(searchLower) ||
+        advocate.lastName.toLowerCase().includes(searchLower) ||
+        advocate.city.toLowerCase().includes(searchLower) ||
+        advocate.degree.toLowerCase().includes(searchLower) ||
+        advocate.specialties.some((s) => s.toLowerCase().includes(searchLower)) ||
+        advocate.yearsOfExperience.toString().includes(search)
       );
     });
 
-    setFilteredAdvocates(filteredAdvocates);
+    setFilteredAdvocates(filtered);
   };
 
   const onClick = () => {
-    console.log(advocates);
+    setSearchTerm("");
     setFilteredAdvocates(advocates);
   };
 
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
-      </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
+    <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Solace Advocates
+          </h1>
+          <p className="text-lg text-gray-600">
+            Find the right healthcare advocate for your needs
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-700 mb-2">Search</p>
+          <p className="text-sm text-gray-600 mb-3">
+            Searching for: <span className="font-semibold text-gray-900">{searchTerm}</span>
+          </p>
+          <div className="flex gap-3">
+            <input
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+              value={searchTerm}
+              onChange={onChange}
+            />
+            <button
+              onClick={onClick}
+              className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200"
+            >
+              Reset Search
+            </button>
+          </div>
+        </div>
+
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading advocates...</p>
+          </div>
+        </div>
+      ) : filteredAdvocates.length > 0 ? (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  First Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  City
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Degree
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Specialties
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Experience
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredAdvocates.map((advocate, index) => {
+                return (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <HighlightMatch text={advocate.firstName} searchTerm={searchTerm} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <HighlightMatch text={advocate.lastName} searchTerm={searchTerm} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <HighlightMatch text={advocate.city} searchTerm={searchTerm} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <HighlightMatch text={advocate.degree} searchTerm={searchTerm} />
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      <div className="flex flex-wrap gap-1">
+                        {advocate.specialties.map((s: string, i: number) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            <HighlightMatch text={s} searchTerm={searchTerm} />
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <HighlightMatch
+                        text={`${advocate.yearsOfExperience} years`}
+                        searchTerm={searchTerm}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {advocate.phoneNumber.toString().replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+          <div className="text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No advocates found</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              Try adjusting your search criteria or{" "}
+              <button
+                onClick={onClick}
+                className="text-blue-600 hover:text-blue-500 font-medium"
+              >
+                clear your search
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
+      </div>
     </main>
   );
 }
